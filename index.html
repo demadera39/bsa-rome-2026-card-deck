@@ -507,6 +507,31 @@ body{
 .gt-subtab{flex:1;text-align:center;padding:9px 4px;font-size:12px;font-weight:600;color:var(--grey);cursor:pointer;border:none;background:transparent;font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s}
 .gt-subtab.on{color:var(--black);border-bottom-color:var(--black)}
 
+/* ===== INSTALL BANNER ===== */
+.install-banner{
+  background:var(--black);color:var(--white);
+  border-radius:12px;padding:14px 16px;
+  margin-bottom:16px;display:none;
+  position:relative;
+}
+.install-banner.show{display:block}
+.install-banner-title{font-size:13px;font-weight:700;margin-bottom:4px;letter-spacing:-.01em}
+.install-banner-text{font-size:11px;line-height:1.5;opacity:.8;margin-bottom:10px}
+.install-banner-steps{font-size:11px;line-height:1.6;opacity:.9}
+.install-banner-steps strong{color:var(--green)}
+.install-banner-btn{
+  background:var(--green);color:var(--white);
+  border:none;border-radius:8px;
+  padding:10px 16px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:inherit;width:100%;
+  margin-top:8px;letter-spacing:-.01em;
+}
+.install-banner-close{
+  position:absolute;top:10px;right:12px;
+  background:none;border:none;color:rgba(255,255,255,.5);
+  font-size:18px;cursor:pointer;line-height:1;
+}
+
 /* ===== YOUTUBE EMBED ===== */
 .watch-btn-row{display:flex;gap:6px;margin-bottom:10px}
 .watch-btn{flex:1;margin-bottom:0}
@@ -615,6 +640,14 @@ body{
     <input class="name-input" id="name-input" type="text" placeholder="Enter your name..." maxlength="40" autocomplete="off">
     <div class="name-hint">Stored only on your device. Private to you.</div>
     <button class="start-btn" onclick="startApp()">Enter the deck</button>
+
+    <div class="install-banner" id="install-banner">
+      <button class="install-banner-close" onclick="dismissInstall()">&times;</button>
+      <div class="install-banner-title">Add to your home screen</div>
+      <div class="install-banner-text">Use this app during the masterclass — even offline. It takes 5 seconds.</div>
+      <div class="install-banner-steps" id="install-steps"></div>
+      <button class="install-banner-btn" id="install-btn" style="display:none" onclick="installPWA()">Install app</button>
+    </div>
 
     <div class="arc-header">Programme arc</div>
     <div class="arc-row"><div class="arc-dot" style="background:var(--red)"><div class="arc-day">Day 1</div><div class="arc-date">30 Mar</div></div><div><div class="arc-label">Self</div><div class="arc-sub">Welcome & icebreaker</div></div></div>
@@ -1059,6 +1092,58 @@ function renderNotes(){
 
 try{const s=localStorage.getItem('bsa_rome_name');if(s)document.getElementById('name-input').value=s;}catch(e){}
 document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')startApp();});
+
+// ===== PWA INSTALL PROMPT =====
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBanner('android-native');
+});
+
+function showInstallBanner(mode) {
+  const banner = document.getElementById('install-banner');
+  const steps = document.getElementById('install-steps');
+  const btn = document.getElementById('install-btn');
+  if(!banner || localStorage.getItem('bsa_install_dismissed')) return;
+
+  if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+
+  if(mode === 'android-native') {
+    steps.innerHTML = '';
+    btn.style.display = 'block';
+  } else {
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isAndroid = /Android/.test(ua);
+    if(isIOS) {
+      steps.innerHTML = '<strong>1.</strong> Tap the <strong>Share</strong> button (box with arrow) below<br><strong>2.</strong> Scroll down and tap <strong>Add to Home Screen</strong><br><strong>3.</strong> Tap <strong>Add</strong>';
+    } else if(isAndroid) {
+      steps.innerHTML = '<strong>1.</strong> Tap the <strong>three-dot menu</strong> (top right)<br><strong>2.</strong> Tap <strong>Add to Home Screen</strong><br><strong>3.</strong> Tap <strong>Add</strong>';
+    } else {
+      return;
+    }
+    btn.style.display = 'none';
+  }
+  banner.classList.add('show');
+}
+
+function installPWA() {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(r => {
+    deferredPrompt = null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('show');
+  try { localStorage.setItem('bsa_install_dismissed','1'); } catch(e){}
+}
+
+// Show banner on load (iOS/Android manual instructions)
+if(!deferredPrompt) showInstallBanner('manual');
 
 // ???????????????????????????????????????????????????????
 // GROWTH TRACKER
