@@ -829,9 +829,9 @@ const ROLE_CARDS = [
 
 const prog=[
   {day:'DAY 1',date:'30 Mar',theme:'Self',col:'#C4200A',bg:'#FF9AB0',items:[{t:'Check-in & Hub Tour',s:'13:00–16:30'},{t:'Read the Room — Icebreaker',s:'16:30'},{t:'Case Study: The High Line',s:'17:00'},{t:'Dinner',s:'19:30'}]},
-  {day:'DAY 2',date:'31 Mar',theme:'System',col:'#00953C',bg:'#66BF8A',items:[{t:'Lorenzo Fioramonti — Being Future Proof',s:'09:15'},{t:'Ecosystem Mapping + Challenge Briefing',s:'10:00'},{t:'Stakeholder Power Mapping + Gallery Walk',s:'11:30'},{t:'Luca Ballarini — Urban Agency',s:'14:00'},{t:'Redesign One Street — Role-Play',s:'15:00',handout:'role-cards'},{t:'Empathy in Action — India',s:'16:15'},{t:'Bridge to Street — Dual-Lens Brief',s:'16:30'}]},
-  {day:'DAY 3',date:'1 Apr',theme:'Street',col:'#0071FF',bg:'#66AAFF',items:[{t:'Yoga with Martina',s:'07:00'},{t:'Field Briefing — Street to Story',s:'09:15'},{t:'Field Immersion Walk',s:'11:30'},{t:'Rosa Dinnissen — Public Affairs',s:'12:15'},{t:'Costanza De Stefani — C40 Cities',s:'14:15'},{t:'Gallery Walk + Prototype for Agency',s:'14:45'},{t:'Narrative Reframing — Sejong City',s:'15:00'},{t:'Tram dinner',s:'19:30'}]},
-  {day:'DAY 4',date:'2 Apr',theme:'Story',col:'#000000',bg:'#A4A4A5',items:[{t:'GYM training',s:'07:00'},{t:'Final Reflections with Carlos Moreno',s:'09:00'},{t:'Changemakers Stage — Ex Dogana',s:'10:30'},{t:'Panel Discussion',s:'11:10'},{t:'Graduation Ceremony',s:'12:30'}]},
+  {day:'DAY 2',date:'31 Mar',theme:'System',col:'#00953C',bg:'#66BF8A',items:[{t:'Lorenzo Fioramonti — Being Future Proof',s:'09:15'},{t:'Ecosystem Mapping + Challenge Briefing',s:'10:00',handout:'ac-eco'},{t:'Stakeholder Power Mapping + Gallery Walk',s:'11:30',handout:'ac-power'},{t:'Luca Ballarini — Urban Agency',s:'14:00'},{t:'Redesign One Street — Role-Play',s:'15:00',handout:'role-cards'},{t:'Empathy in Action — India',s:'16:15',handouts:['ac-object','ref-feedback']},{t:'Bridge to Street — Dual-Lens Brief',s:'16:30',handout:'ac-duallens'}]},
+  {day:'DAY 3',date:'1 Apr',theme:'Street',col:'#0071FF',bg:'#66AAFF',items:[{t:'Yoga with Martina',s:'07:00'},{t:'Field Briefing — Street to Story',s:'09:15',handout:'fi-tech'},{t:'Field Immersion Walk',s:'11:30',handout:'ac-fieldwalk'},{t:'Rosa Dinnissen — Public Affairs',s:'12:15'},{t:'Costanza De Stefani — C40 Cities',s:'14:15'},{t:'Gallery Walk + Prototype for Agency',s:'14:45'},{t:'Narrative Reframing — Sejong City',s:'15:00',handouts:['ac-narrative','ol']},{t:'Tram dinner',s:'19:30'}]},
+  {day:'DAY 4',date:'2 Apr',theme:'Story',col:'#000000',bg:'#A4A4A5',items:[{t:'GYM training',s:'07:00'},{t:'Final Reflections with Carlos Moreno',s:'09:00',handout:'om'},{t:'Changemakers Stage — Ex Dogana',s:'10:30'},{t:'Panel Discussion',s:'11:10'},{t:'Graduation Ceremony',s:'12:30'}]},
 ];
 
 let notes={},activeFilter='ALL';
@@ -939,13 +939,55 @@ function renderCard(c){
   </div>`;
 }
 
+function renderProgHandouts(item, dayKey, idx){
+  const ids = item.handouts || (item.handout ? [item.handout] : []);
+  if(!ids.length) return '';
+  return ids.map((hid,hi) => {
+    const uid = `ho-${dayKey}-${idx}-${hi}`;
+    if(hid === 'role-cards') {
+      return `<button class="prog-handout-btn" onclick="toggleHandout('${uid}')">&#9654; Role cards</button><div class="role-cards-wrap" id="${uid}">${renderRoleCards()}</div>`;
+    }
+    const card = cards.find(c => c.id === hid);
+    if(!card) return '';
+    const label = card.type === 'OBS' ? 'Observation card' : card.type === 'FIELD' ? 'Field reference' : card.type === 'REFERENCE' ? 'Reference guide' : 'Activity guide';
+    return `<button class="prog-handout-btn" onclick="toggleHandout('${uid}')">&#9654; ${label}</button><div class="role-cards-wrap" id="${uid}">${renderActivityHandout(card)}</div>`;
+  }).join('');
+}
+
+function renderActivityHandout(c){
+  const col = CAT[c.cat] || '#67686A';
+  if(c.steps) {
+    return `<div class="role-card" style="background:#1a1a1a;border-top:4px solid ${col}">
+      <div class="role-card-title" style="color:${col};margin-bottom:4px">${c.title}</div>
+      ${c.dur ? `<div style="font-size:10px;color:var(--grey);margin-bottom:12px;font-weight:600;letter-spacing:.04em">⏱ ${c.dur}</div>` : ''}
+      ${c.steps.map(s => `<div style="font-size:11px;line-height:1.55;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.9)">${s}</div>`).join('')}
+      ${c.exit ? `<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.08);border-left:3px solid ${col};border-radius:0 8px 8px 0"><div style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${col};margin-bottom:4px">Exit question</div><div style="font-size:11px;line-height:1.5;color:rgba(255,255,255,.85)">${c.exit}</div></div>` : ''}
+    </div>`;
+  }
+  if(c.prompts) {
+    return `<div class="role-card" style="background:#1a1a1a;border-top:4px solid ${col}">
+      <div class="role-card-title" style="color:${col};margin-bottom:10px">${c.title}</div>
+      ${c.prompts.map(p => `<div style="font-size:11px;line-height:1.55;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.9)">${p}</div>`).join('')}
+    </div>`;
+  }
+  return '';
+}
+
+function toggleHandout(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('open');
+  const btn=el.previousElementSibling;
+  if(btn) btn.innerHTML=el.classList.contains('open') ? btn.innerHTML.replace('▶','▼') : btn.innerHTML.replace('▼','▶');
+}
+
 function renderProg(){
   document.getElementById('prog-content').innerHTML=prog.map(d=>`<div class="prog-block">
     <div class="prog-header" style="background:${d.bg};border:2px solid ${d.col}">
       <div style="font-size:11px;font-weight:700;color:${d.col};letter-spacing:-.01em">${d.day} · ${d.date}</div>
       <div style="font-size:16px;font-weight:800;color:var(--black);letter-spacing:-.02em">${d.theme}</div>
     </div>
-    ${d.items.map((i,idx)=>`<div class="prog-row"><div class="prog-dot" style="background:${d.col}"></div><div style="flex:1"><div class="prog-t">${i.t}</div><div class="prog-s">${i.s}</div>${i.handout==='role-cards'?`<button class="prog-handout-btn" onclick="toggleRoleCards('rc-${d.day}-${idx}')">&#9654; View role cards</button><div class="role-cards-wrap" id="rc-${d.day}-${idx}">${renderRoleCards()}</div>`:''}</div></div>`).join('')}
+    ${d.items.map((i,idx)=>`<div class="prog-row"><div class="prog-dot" style="background:${d.col}"></div><div style="flex:1"><div class="prog-t">${i.t}</div><div class="prog-s">${i.s}</div>${renderProgHandouts(i,d.day,idx)}</div></div>`).join('')}
   </div>`).join('');
 }
 
@@ -989,13 +1031,7 @@ function renderRoleCards(){
   `).join('');
 }
 
-function toggleRoleCards(id){
-  const el=document.getElementById(id);
-  if(!el)return;
-  el.classList.toggle('open');
-  const btn=el.previousElementSibling;
-  if(btn)btn.innerHTML=el.classList.contains('open')?'&#9660; Hide role cards':'&#9654; View role cards';
-}
+// toggleRoleCards replaced by generic toggleHandout in renderProg
 
 function renderNotes(){
   const el=document.getElementById('notes-content');
