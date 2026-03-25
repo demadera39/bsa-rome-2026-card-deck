@@ -1,0 +1,14 @@
+{
+  "name": "BSA Rome 2026 — Reflective Card Deck",
+  "short_name": "BSA Rome",
+  "description": "Your companion for the Better Society Academy masterclass. Watch, reflect, and capture your thinking across 4 days in Rome.",
+  "start_url": "/bsa-rome-2026-card-deck/",
+  "display": "standalone",
+  "background_color": "#00953C",
+  "theme_color": "#00953C",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
